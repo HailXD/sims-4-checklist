@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sims 4 DLC Checklist</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body data-sprite-url="{{ sprite_url }}">
+    <header class="page-header">
+      <div>
+        <h1>The Sims 4 DLC Checklist</h1>
+        <p>Toggle packs on or off and keep an up-to-date <code>-disablepacks</code> argument.</p>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="ghost" data-action="refresh">Refresh</button>
+        <button type="button" class="danger" data-action="reset">Reset to Default</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="dlc-sections" data-role="categories"></section>
+
+      <section class="outputs">
+        <div>
+          <h2>-disablepacks Argument</h2>
+          <div class="output-row">
+            <textarea id="disable-output" readonly spellcheck="false"></textarea>
+            <button type="button" data-copy-target="disable-output">Copy</button>
+          </div>
+        </div>
+        <div>
+          <h2>Checklist Markdown</h2>
+          <div class="output-row">
+            <textarea id="markdown-output" readonly spellcheck="false"></textarea>
+            <button type="button" data-copy-target="markdown-output">Copy</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="status-bar" data-role="status" aria-live="polite"></div>
+
+    <script id="bootstrap-data" type="application/json">
+      {{ initial_payload | tojson }}
+    </script>
+    <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+  </body>
+</html>

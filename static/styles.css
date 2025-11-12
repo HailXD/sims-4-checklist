@@ -1,0 +1,218 @@
+:root {
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #0b243b;
+  background-color: #f4f7fb;
+  --accent: #00b9ae;
+  --accent-dark: #00746d;
+  --danger: #c72c41;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #f0fbff, #f4f7fb 55%);
+  color: inherit;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem clamp(1rem, 4vw, 3rem);
+  background: #fff;
+  border-bottom: 1px solid #e1e7ef;
+}
+
+.page-header h1 {
+  margin: 0 0 0.25rem;
+  font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.header-actions button {
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.header-actions .ghost {
+  border-color: #d0dae6;
+  background: #fff;
+}
+
+.header-actions .danger {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+}
+
+.header-actions button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.layout {
+  padding: clamp(1rem, 3vw, 3rem);
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(280px, 1fr);
+  gap: 2rem;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dlc-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.dlc-section {
+  background: #fff;
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 20px 40px rgba(15, 30, 65, 0.08);
+}
+
+.dlc-section h2 {
+  margin: 0 0 1rem;
+}
+
+.dlc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.dlc-card {
+  background: linear-gradient(145deg, #fdfefe, #f5f7fb);
+  border-radius: 1rem;
+  padding: 1rem;
+  border: 1px solid #e5ecf3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+  transition: transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+}
+
+.dlc-card[data-enabled="false"] {
+  opacity: 0.55;
+}
+
+.dlc-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(15, 30, 65, 0.1);
+}
+
+.dlc-card svg {
+  width: 56px;
+  height: 56px;
+}
+
+.dlc-name {
+  font-weight: 600;
+  text-align: center;
+}
+
+.dlc-code {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #5a6980;
+}
+
+.toggle {
+  width: 100%;
+  border-radius: 999px;
+  padding: 0.35rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  transition: background 150ms ease;
+}
+
+.toggle[data-enabled="false"] {
+  background: #93a3b8;
+}
+
+.outputs {
+  background: #fff;
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 20px 40px rgba(15, 30, 65, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.output-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid #dfe7f1;
+  font-family: "Consolas", "SFMono-Regular", ui-monospace, "Roboto Mono", monospace;
+  font-size: 0.95rem;
+  resize: vertical;
+  background: #fdfefe;
+}
+
+.output-row button {
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.75rem;
+  border: 1px solid #dfe7f1;
+  background: #fff;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.output-row button:hover {
+  background: #eef3fb;
+}
+
+.status-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  background: rgba(12, 30, 60, 0.95);
+  color: #fff;
+  padding: 0.65rem 1.5rem;
+  border-radius: 999px;
+  box-shadow: 0 15px 30px rgba(12, 30, 60, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+  font-weight: 600;
+}
+
+.status-bar[data-visible="true"] {
+  opacity: 1;
+}
