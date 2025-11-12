@@ -17,8 +17,6 @@ from flask import (
 BASE_DIR = Path(__file__).resolve().parent
 STATE_MD = BASE_DIR / "state.md"
 DEFAULT_MD = BASE_DIR / "default.md"
-MAIN_TXT = BASE_DIR / "main.txt"
-DISABLE_TXT = BASE_DIR / "main_disable.txt"
 SVG_FILE = BASE_DIR / "svgs.html"
 
 with open('raw.txt', 'r') as f:
@@ -106,8 +104,6 @@ def persist_state(
     disable_arg = build_disable_argument(categories)
     if write_state:
         STATE_MD.write_text(markdown, encoding="utf-8")
-    MAIN_TXT.write_text(markdown, encoding="utf-8")
-    DISABLE_TXT.write_text(disable_arg, encoding="utf-8")
     return markdown, disable_arg
 
 
@@ -250,7 +246,7 @@ def main() -> None:
 
     if args.init_only:
         bootstrap_state()
-        print(f"State synced to {STATE_MD.name}, {MAIN_TXT.name}, and {DISABLE_TXT.name}.")
+        print(f"State synced to {STATE_MD.name}")
         return
 
     run_server(args.host, args.port, args.debug)
