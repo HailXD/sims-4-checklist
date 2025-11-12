@@ -1,4 +1,4 @@
-x = """# The Sims 4 DLC — Checklist
+x = """# The Sims 4 DLC - Checklist
 
 ## Expansion Packs
 
@@ -72,7 +72,7 @@ x = """# The Sims 4 DLC — Checklist
 - [ ] SP28 - Modern Menswear
 - [ ] SP29 - Blooming Rooms
 - [x] SP30 - Carnaval Streetwear
-- [ ] SP31 - Décor to the Max
+- [ ] SP31 - Decor to the Max
 - [ ] SP32 - Moonlight Chic
 - [ ] SP33 - Little Campers
 - [x] SP34 - First Fits
