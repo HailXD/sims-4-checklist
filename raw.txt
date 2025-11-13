@@ -5,15 +5,15 @@
 - [x] EP01 - Get To Work
 - [x] EP02 - Get Together
 - [x] EP03 - City Living
-- [ ] EP04 - Cats & Dogs
+- [x] EP04 - Cats & Dogs
 - [x] EP05 - Seasons
 - [x] EP06 - Get Famous
 - [x] EP07 - Island Living
-- [x] EP08 - Discover University
+- [ ] EP08 - Discover University
 - [x] EP09 - Eco Lifestyle
 - [x] EP10 - Snowy Escape
 - [x] EP11 - Cottage Living
-- [x] EP12 - High School Years
+- [ ] EP12 - High School Years
 - [ ] EP13 - Growing Together
 - [ ] EP14 - Horse Ranch
 - [x] EP15 - For Rent
