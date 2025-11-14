@@ -464,8 +464,12 @@ class ChecklistWindow(QtWidgets.QMainWindow):
             return
         for category in categories:
             group_box = QtWidgets.QGroupBox(category["title"])
-            group_layout = QtWidgets.QVBoxLayout(group_box)
-            for item in category["items"]:
+            group_layout = QtWidgets.QGridLayout(group_box)
+            group_layout.setHorizontalSpacing(12)
+            group_layout.setVerticalSpacing(8)
+            for col in range(3):
+                group_layout.setColumnStretch(col, 1)
+            for idx, item in enumerate(category["items"]):
                 label = f"{item['name']} ({item['code']})"
                 checkbox = QtWidgets.QCheckBox(label)
                 icon = get_pack_icon(item["code"])
@@ -476,9 +480,9 @@ class ChecklistWindow(QtWidgets.QMainWindow):
                 checkbox.stateChanged.connect(
                     partial(self.handle_checkbox_state_changed, item["code"])
                 )
-                group_layout.addWidget(checkbox)
+                row, col = divmod(idx, 3)
+                group_layout.addWidget(checkbox, row, col)
                 self.checkbox_map[item["code"]] = checkbox
-            group_layout.addStretch()
             self.categories_layout.addWidget(group_box)
         self.categories_layout.addStretch()
 
