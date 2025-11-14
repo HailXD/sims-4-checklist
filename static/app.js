@@ -153,6 +153,28 @@
     }
   };
 
+  const handleDisableArgumentUpdate = async () => {
+    if (!disableOutput) {
+      return;
+    }
+    const argument = disableOutput.value.trim();
+    if (!argument) {
+      showStatus("Enter a -disablepacks argument first.", false);
+      return;
+    }
+    showStatus("Updating disable list...");
+    try {
+      const payload = await request("/api/disable", {
+        method: "POST",
+        body: JSON.stringify({ argument }),
+      });
+      render(payload);
+      showStatus("Disable list applied.");
+    } catch (error) {
+      showStatus(error.message, false);
+    }
+  };
+
   const handleCopy = async (targetId) => {
     const field = document.getElementById(targetId);
     if (!field) {
@@ -179,6 +201,8 @@
       handleReset();
     } else if (target.dataset.action === "refresh") {
       handleRefresh();
+    } else if (target.dataset.action === "apply-disable") {
+      handleDisableArgumentUpdate();
     } else if (target.dataset.copyTarget) {
       handleCopy(target.dataset.copyTarget);
     }
