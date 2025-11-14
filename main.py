@@ -2,19 +2,14 @@ import argparse
 import copy
 import os
 import re
+import sys
 from datetime import datetime, timezone
+from functools import partial
 from pathlib import Path
 from threading import Lock
 from typing import Dict, List, Tuple
 
-from flask import (
-    Flask,
-    jsonify,
-    render_template,
-    request,
-    send_from_directory,
-    url_for,
-)
+from PyQt6 import QtCore, QtWidgets
 
 BASE_DIR = Path(__file__).resolve().parent
 STATE_MD = BASE_DIR / "state.md"
@@ -329,83 +324,158 @@ def bootstrap_state() -> None:
 
 bootstrap_state()
 
-app = Flask(__name__, static_folder="static", template_folder="templates")
-app.config["JSON_SORT_KEYS"] = False
+class ChecklistWindow(QtWidgets.QMainWindow):
+    """Simple desktop UI for browsing and updating the Sims 4 DLC checklist."""
 
+    def __init__(self) -> None:
+        super().__init__()
+        self.setWindowTitle("Sims 4 DLC Checklist")
+        self.resize(1100, 750)
+        self.checkbox_map: Dict[str, QtWidgets.QCheckBox] = {}
+        self._build_ui()
+        self.refresh_payload()
 
-@app.route("/", methods=["GET"])
-def index():
-    payload = build_payload()
-    sprite_url = url_for("svg_sprite")
-    return render_template("index.html", initial_payload=payload, sprite_url=sprite_url)
+    def _build_ui(self) -> None:
+        central = QtWidgets.QWidget()
+        self.setCentralWidget(central)
+        main_layout = QtWidgets.QVBoxLayout(central)
+        main_layout.setSpacing(12)
 
+        self.updated_label = QtWidgets.QLabel("Last updated: --")
+        self.updated_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
+        main_layout.addWidget(self.updated_label)
 
-@app.route("/svgs.html", methods=["GET"])
-def svg_sprite():
-    if not SVG_FILE.exists():
-        return jsonify({"error": "SVG sprite sheet is missing."}), 404
-    return send_from_directory(BASE_DIR, "svgs.html", mimetype="image/svg+xml")
+        self.scroll_area = QtWidgets.QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.categories_container = QtWidgets.QWidget()
+        self.categories_layout = QtWidgets.QVBoxLayout(self.categories_container)
+        self.categories_layout.setContentsMargins(0, 0, 0, 0)
+        self.categories_layout.setSpacing(10)
+        self.scroll_area.setWidget(self.categories_container)
+        main_layout.addWidget(self.scroll_area, stretch=1)
 
+        disable_row = QtWidgets.QHBoxLayout()
+        disable_label = QtWidgets.QLabel("Disable argument:")
+        self.disable_line = QtWidgets.QLineEdit()
+        self.disable_line.setPlaceholderText("-disablepacks:EP01,EP02,...")
+        self.apply_argument_button = QtWidgets.QPushButton("Apply")
+        self.apply_argument_button.clicked.connect(self.apply_disable_argument_from_ui)
+        disable_row.addWidget(disable_label)
+        disable_row.addWidget(self.disable_line, stretch=1)
+        disable_row.addWidget(self.apply_argument_button)
+        main_layout.addLayout(disable_row)
 
-@app.route("/api/state", methods=["GET"])
-def api_state():
-    return jsonify(build_payload())
+        button_row = QtWidgets.QHBoxLayout()
+        self.refresh_button = QtWidgets.QPushButton("Refresh from Launcher")
+        self.refresh_button.clicked.connect(self.refresh_from_launcher)
+        self.reset_button = QtWidgets.QPushButton("Reset to Default")
+        self.reset_button.clicked.connect(self.reset_state_to_default)
+        button_row.addWidget(self.refresh_button)
+        button_row.addWidget(self.reset_button)
+        button_row.addStretch()
+        main_layout.addLayout(button_row)
 
+        self.markdown_edit = QtWidgets.QPlainTextEdit()
+        self.markdown_edit.setReadOnly(True)
+        self.markdown_edit.setPlaceholderText("Markdown view of the current checklist.")
+        self.markdown_edit.setMinimumHeight(180)
+        main_layout.addWidget(self.markdown_edit)
 
-@app.route("/api/toggle", methods=["POST"])
-def api_toggle():
-    data = request.get_json(silent=True) or {}
-    code = str(data.get("code", "")).strip().upper()
-    if not code:
-        return jsonify({"error": "Missing DLC code."}), 400
-    if "enabled" not in data:
-        return jsonify({"error": "Missing enabled flag."}), 400
-    enabled = data["enabled"]
-    if not isinstance(enabled, bool):
-        enabled = str(enabled).strip().lower() in {"1", "true", "yes", "on"}
-    try:
-        payload = update_item_state(code, enabled)
-    except KeyError:
-        return jsonify({"error": f"DLC code '{code}' was not found."}), 404
-    return jsonify(payload)
+        self.setStatusBar(QtWidgets.QStatusBar())
 
+    def _ensure_category_widgets(self, categories: List[Dict]) -> None:
+        if self.checkbox_map:
+            return
+        for category in categories:
+            group_box = QtWidgets.QGroupBox(category["title"])
+            group_layout = QtWidgets.QVBoxLayout(group_box)
+            for item in category["items"]:
+                label = f"{item['name']} ({item['code']})"
+                checkbox = QtWidgets.QCheckBox(label)
+                checkbox.setChecked(item.get("enabled", False))
+                checkbox.stateChanged.connect(
+                    partial(self.handle_checkbox_state_changed, item["code"])
+                )
+                group_layout.addWidget(checkbox)
+                self.checkbox_map[item["code"]] = checkbox
+            group_layout.addStretch()
+            self.categories_layout.addWidget(group_box)
+        self.categories_layout.addStretch()
 
-@app.route("/api/disable", methods=["POST"])
-def api_disable_argument():
-    data = request.get_json(silent=True) or {}
-    argument = str(data.get("argument", "")).strip()
-    if not argument:
-        return jsonify({"error": "Missing -disablepacks argument."}), 400
-    try:
-        payload = apply_disable_argument(argument, write_state=True, sync_launcher_file=True)
-    except ValueError as error:
-        return jsonify({"error": str(error)}), 400
-    return jsonify(payload)
+    def _update_checkboxes(self, categories: List[Dict]) -> None:
+        for category in categories:
+            for item in category["items"]:
+                checkbox = self.checkbox_map.get(item["code"])
+                if checkbox is None:
+                    continue
+                block = checkbox.blockSignals(True)
+                checkbox.setChecked(item.get("enabled", False))
+                checkbox.blockSignals(block)
 
+    def _apply_payload(self, payload: Dict) -> None:
+        self._ensure_category_widgets(payload["categories"])
+        self._update_checkboxes(payload["categories"])
+        self.disable_line.setText(payload["disableArgument"])
+        self.markdown_edit.setPlainText(payload["markdown"])
+        self.updated_label.setText(f"Last updated: {payload['updatedAt']}")
 
-@app.route("/api/reset", methods=["POST"])
-def api_reset():
-    payload = reset_state_to_default()
-    return jsonify(payload)
+    def refresh_payload(self) -> None:
+        payload = build_payload()
+        self._apply_payload(payload)
 
+    def handle_checkbox_state_changed(self, code: str, state: int) -> None:
+        enabled = QtCore.Qt.CheckState(state) == QtCore.Qt.CheckState.Checked
+        try:
+            payload = update_item_state(code, enabled)
+        except KeyError:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Unknown DLC Code",
+                f"DLC code '{code}' could not be found.",
+            )
+            self.refresh_payload()
+            return
+        self._apply_payload(payload)
+        action = "enabled" if enabled else "disabled"
+        self.statusBar().showMessage(f"{code} {action}", 3000)
 
-def run_server(host: str, port: int, debug: bool) -> None:
-    app.run(host=host, port=port, debug=debug, use_reloader=False)
+    def apply_disable_argument_from_ui(self) -> None:
+        argument = self.disable_line.text().strip()
+        if not argument:
+            QtWidgets.QMessageBox.warning(
+                self, "Missing Argument", "Enter a -disablepacks argument first."
+            )
+            return
+        try:
+            payload = apply_disable_argument(argument, write_state=True, sync_launcher_file=True)
+        except ValueError as error:
+            QtWidgets.QMessageBox.warning(self, "Invalid Argument", str(error))
+            return
+        self._apply_payload(payload)
+        self.statusBar().showMessage("Disable argument applied.", 3000)
+
+    def reset_state_to_default(self) -> None:
+        payload = reset_state_to_default()
+        self._apply_payload(payload)
+        self.statusBar().showMessage("Checklist reset to defaults.", 3000)
+
+    def refresh_from_launcher(self) -> None:
+        changed = sync_state_from_launcher(force=True)
+        self.refresh_payload()
+        if changed:
+            self.statusBar().showMessage("State synced from launcher file.", 3000)
+        else:
+            self.statusBar().showMessage("Launcher file already in sync.", 3000)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Serve a Sims 4 DLC checklist with persistence."
-    )
-    parser.add_argument("--host", default="127.0.0.1", help="Host interface to bind.")
-    parser.add_argument("--port", type=int, default=5000, help="Port to listen on.")
-    parser.add_argument(
-        "--debug", action="store_true", help="Run Flask in debug mode (no reloader)."
+        description="Launch a Sims 4 DLC checklist desktop UI."
     )
     parser.add_argument(
         "--init-only",
         action="store_true",
-        help="Create markdown outputs and exit without starting the server.",
+        help="Create markdown outputs and exit without starting the UI.",
     )
     args = parser.parse_args()
 
@@ -414,7 +484,10 @@ def main() -> None:
         print(f"State synced to {STATE_MD.name}")
         return
 
-    run_server(args.host, args.port, args.debug)
+    app = QtWidgets.QApplication(sys.argv)
+    window = ChecklistWindow()
+    window.show()
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":
