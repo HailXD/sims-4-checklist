@@ -3,13 +3,19 @@ import copy
 import os
 import re
 import sys
+import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from functools import partial
 from pathlib import Path
 from threading import Lock
 from typing import Dict, List, Tuple
 
-from PyQt6 import QtCore, QtWidgets
+from PyQt6 import QtCore, QtGui, QtWidgets
+
+try:
+    from PyQt6.QtSvg import QSvgRenderer
+except ImportError:  # pragma: no cover - QtSvg may be optional
+    QSvgRenderer = None
 
 BASE_DIR = Path(__file__).resolve().parent
 STATE_MD = BASE_DIR / "state.md"
@@ -19,9 +25,79 @@ DEFAULT_LAUNCHER_PATH = r"C:\Users\jyeal\Desktop\The Sims 4.bat"
 RAW_LAUNCHER_PATH = os.environ.get("SIMS4_BAT_PATH", DEFAULT_LAUNCHER_PATH)
 DISABLE_PREFIX = "-disablepacks:"
 DISABLE_REGEX = re.compile(r"-disablepacks:[^\s]+", re.IGNORECASE)
+SVG_NS = "http://www.w3.org/2000/svg"
+SVG_ICON_SIZE = 48
+SVG_SYMBOLS: Dict[str, bytes] = {}
+SVG_ICON_CACHE: Dict[str, QtGui.QIcon] = {}
+
+ET.register_namespace("", SVG_NS)
 
 with open('raw.txt', 'r') as f:
     RAW_CHECKLIST = f.read()
+
+
+def _svg_tag(tag: str) -> str:
+    return f"{{{SVG_NS}}}{tag}"
+
+
+def _load_svg_symbols() -> Dict[str, bytes]:
+    if not SVG_FILE.exists():
+        return {}
+    try:
+        tree = ET.parse(SVG_FILE)
+    except (ET.ParseError, OSError):
+        return {}
+    root = tree.getroot()
+    symbols: Dict[str, bytes] = {}
+    for symbol in root.findall(_svg_tag("symbol")):
+        symbol_id = symbol.attrib.get("id")
+        if not symbol_id:
+            continue
+        view_box = symbol.attrib.get("viewBox") or "0 0 256 256"
+        svg_element = ET.Element(_svg_tag("svg"), attrib={"viewBox": view_box})
+        for attr in ("width", "height"):
+            value = symbol.attrib.get(attr)
+            if value:
+                svg_element.set(attr, value)
+        for child in symbol:
+            svg_element.append(copy.deepcopy(child))
+        svg_bytes = ET.tostring(svg_element, encoding="utf-8")
+        symbols[symbol_id.strip().upper()] = svg_bytes
+    return symbols
+
+
+def _render_svg_icon(svg_bytes: bytes, size: int = SVG_ICON_SIZE) -> QtGui.QIcon | None:
+    if QSvgRenderer is None:
+        return None
+    renderer = QSvgRenderer(svg_bytes)
+    if not renderer.isValid():
+        return None
+    pixmap = QtGui.QPixmap(size, size)
+    pixmap.fill(QtCore.Qt.GlobalColor.transparent)
+    painter = QtGui.QPainter(pixmap)
+    renderer.render(painter, QtCore.QRectF(0, 0, size, size))
+    painter.end()
+    icon = QtGui.QIcon(pixmap)
+    return None if icon.isNull() else icon
+
+
+def get_pack_icon(code: str) -> QtGui.QIcon | None:
+    if not code:
+        return None
+    normalized = code.strip().upper()
+    icon = SVG_ICON_CACHE.get(normalized)
+    if icon:
+        return icon
+    svg_bytes = SVG_SYMBOLS.get(normalized)
+    if not svg_bytes:
+        return None
+    icon = _render_svg_icon(svg_bytes)
+    if icon:
+        SVG_ICON_CACHE[normalized] = icon
+    return icon
+
+
+SVG_SYMBOLS = _load_svg_symbols()
 
 
 def _resolve_launcher_path(raw_path: str) -> Path:
@@ -392,6 +468,10 @@ class ChecklistWindow(QtWidgets.QMainWindow):
             for item in category["items"]:
                 label = f"{item['name']} ({item['code']})"
                 checkbox = QtWidgets.QCheckBox(label)
+                icon = get_pack_icon(item["code"])
+                if icon:
+                    checkbox.setIcon(icon)
+                    checkbox.setIconSize(QtCore.QSize(SVG_ICON_SIZE, SVG_ICON_SIZE))
                 checkbox.setChecked(item.get("enabled", False))
                 checkbox.stateChanged.connect(
                     partial(self.handle_checkbox_state_changed, item["code"])
