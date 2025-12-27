@@ -14,14 +14,14 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 
 try:
     from PyQt6.QtSvg import QSvgRenderer
-except ImportError:  # pragma: no cover - QtSvg may be optional
+except ImportError:
     QSvgRenderer = None
 
 BASE_DIR = Path(__file__).resolve().parent
 STATE_MD = BASE_DIR / "state.md"
 DEFAULT_MD = BASE_DIR / "default.md"
 SVG_FILE = BASE_DIR / "svgs.html"
-DEFAULT_LAUNCHER_PATH = r"C:\Users\jyeal\Desktop\The Sims 4.bat"
+DEFAULT_LAUNCHER_PATH = r"The Sims 4.bat"
 RAW_LAUNCHER_PATH = os.environ.get("SIMS4_BAT_PATH", DEFAULT_LAUNCHER_PATH)
 DISABLE_PREFIX = "-disablepacks:"
 DISABLE_REGEX = re.compile(r"-disablepacks:[^\s]*", re.IGNORECASE)
@@ -241,7 +241,7 @@ def persist_state(
 
 
 def sync_launcher_argument(disable_argument: str) -> None:
-    global _launcher_mtime  # pylint: disable=global-statement
+    global _launcher_mtime
     if not disable_argument or not str(LAUNCHER_BAT):
         return
     try:
@@ -278,7 +278,7 @@ def sync_launcher_argument(disable_argument: str) -> None:
 
 
 def sync_state_from_launcher(force: bool = False) -> bool:
-    global _launcher_mtime  # pylint: disable=global-statement
+    global _launcher_mtime
     if not str(LAUNCHER_BAT):
         return False
     try:
@@ -324,7 +324,7 @@ def ensure_output_files() -> None:
 
 
 def refresh_state_from_disk() -> None:
-    global _state_categories, _code_index  # pylint: disable=global-statement
+    global _state_categories, _code_index
     if STATE_MD.exists():
         parsed = parse_checklist(STATE_MD.read_text(encoding="utf-8"))
     else:
@@ -382,7 +382,7 @@ def update_item_state(code: str, enabled: bool) -> Dict:
 
 
 def reset_state_to_default() -> Dict:
-    global _state_categories, _code_index  # pylint: disable=global-statement
+    global _state_categories, _code_index
     with STATE_LOCK:
         _state_categories = copy.deepcopy(DEFAULT_CATEGORIES)
         _code_index = build_code_index(_state_categories)
