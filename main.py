@@ -154,6 +154,11 @@ def parse_checklist(markdown: str) -> List[Dict]:
 
 
 DEFAULT_CATEGORIES = parse_checklist(RAW_CHECKLIST)
+DEFAULT_CODE_TO_CATEGORY = {
+    item["code"]: category["title"]
+    for category in DEFAULT_CATEGORIES
+    for item in category["items"]
+}
 STATE_LOCK = Lock()
 _state_categories: List[Dict] = []
 _code_index: Dict[str, Dict] = {}
@@ -190,11 +195,109 @@ def parse_disable_argument(argument: str) -> Tuple[str, List[str]]:
     return canonical, codes
 
 
+def is_pack_code(code: str) -> bool:
+    return bool(re.fullmatch(r"[A-Z]{2}\d+", code))
+
+
+def infer_category_for_code(code: str) -> str:
+    if code in DEFAULT_CODE_TO_CATEGORY:
+        return DEFAULT_CODE_TO_CATEGORY[code]
+    if code.startswith("EP"):
+        return "Expansion Packs"
+    if code.startswith("GP"):
+        return "Game Packs"
+    if code.startswith("FP"):
+        return "Free Stuff"
+    if code.startswith("SP"):
+        match = re.fullmatch(r"SP(\d+)", code)
+        if match:
+            number = int(match.group(1))
+            if number <= 18 or number in {46, 49}:
+                return "Stuff Packs"
+            if number in {56, 57, 61, 62, 63, 64, 71, 72, 73, 74, 81}:
+                return "Creator Kit"
+            return "Kits"
+        return "Kits"
+    return "Other Content"
+
+
+def infer_name_for_code(code: str) -> str:
+    return f"Unknown Pack ({code})"
+
+
+def rebuild_code_index() -> None:
+    global _code_index
+    _code_index = build_code_index(_state_categories)
+
+
+def merge_categories_with_defaults(categories: List[Dict]) -> List[Dict]:
+    existing_by_code = {
+        item["code"]: item
+        for item in flatten_items(categories)
+    }
+    merged: List[Dict] = []
+    seen_codes: set[str] = set()
+    for default_category in DEFAULT_CATEGORIES:
+        merged_items: List[Dict] = []
+        for default_item in default_category["items"]:
+            code = default_item["code"]
+            seen_codes.add(code)
+            if code in existing_by_code:
+                source = existing_by_code[code]
+                merged_items.append(
+                    {
+                        "code": code,
+                        "name": default_item["name"],
+                        "enabled": source.get("enabled", default_item.get("enabled", True)),
+                    }
+                )
+            else:
+                merged_items.append(copy.deepcopy(default_item))
+        merged.append({"title": default_category["title"], "items": merged_items})
+    for category in categories:
+        extras = [item for item in category["items"] if item["code"] not in seen_codes]
+        if not extras:
+            continue
+        title = category["title"]
+        target = next((entry for entry in merged if entry["title"] == title), None)
+        if target is None:
+            merged.append({"title": title, "items": copy.deepcopy(extras)})
+        else:
+            target["items"].extend(copy.deepcopy(extras))
+    return merged
+
+
+def add_missing_codes(codes: set[str], *, enabled: bool) -> bool:
+    changed = False
+    if not codes:
+        return changed
+    existing_codes = set(_code_index.keys())
+    category_lookup = {category["title"]: category for category in _state_categories}
+    for code in sorted(codes):
+        if code in existing_codes:
+            continue
+        title = infer_category_for_code(code)
+        if title not in category_lookup:
+            category_lookup[title] = {"title": title, "items": []}
+            _state_categories.append(category_lookup[title])
+        category_lookup[title]["items"].append(
+            {
+                "code": code,
+                "name": infer_name_for_code(code),
+                "enabled": enabled,
+            }
+        )
+        changed = True
+    if changed:
+        rebuild_code_index()
+    return changed
+
+
 def build_disable_argument(categories: List[Dict]) -> str:
     disabled_codes = [
         item["code"]
         for item in flatten_items(categories)
-        if not item.get("enabled", False)
+        if not item.get("enabled", False) and is_pack_code(item["code"])
     ]
     return "-disablepacks:" + ",".join(disabled_codes)
 
@@ -303,7 +406,8 @@ def sync_state_from_launcher(force: bool = False) -> bool:
         if not _state_categories:
             _launcher_mtime = stat_result.st_mtime
             return False
-        changed = apply_disabled_codes(disabled_codes)
+        changed = add_missing_codes(disabled_codes, enabled=False)
+        changed = apply_disabled_codes(disabled_codes) or changed
         if changed:
             persist_state(_state_categories, write_state=True)
     _launcher_mtime = stat_result.st_mtime
@@ -311,13 +415,16 @@ def sync_state_from_launcher(force: bool = False) -> bool:
 
 
 def ensure_output_files() -> None:
-    if not DEFAULT_MD.exists():
-        DEFAULT_MD.write_text(generate_markdown(DEFAULT_CATEGORIES), encoding="utf-8")
+    DEFAULT_MD.write_text(generate_markdown(DEFAULT_CATEGORIES), encoding="utf-8")
 
     if STATE_MD.exists():
         parsed = parse_checklist(STATE_MD.read_text(encoding="utf-8"))
-        target = parsed or copy.deepcopy(DEFAULT_CATEGORIES)
-        write_state = not parsed
+        if parsed:
+            target = merge_categories_with_defaults(parsed)
+            write_state = target != parsed
+        else:
+            target = copy.deepcopy(DEFAULT_CATEGORIES)
+            write_state = True
         persist_state(target, write_state=write_state)
     else:
         persist_state(copy.deepcopy(DEFAULT_CATEGORIES), write_state=True)
@@ -332,8 +439,13 @@ def refresh_state_from_disk() -> None:
     if not parsed:
         parsed = copy.deepcopy(DEFAULT_CATEGORIES)
         persist_state(parsed, write_state=True)
+    else:
+        merged = merge_categories_with_defaults(parsed)
+        if merged != parsed:
+            parsed = merged
+            persist_state(parsed, write_state=True)
     _state_categories = parsed
-    _code_index = build_code_index(_state_categories)
+    rebuild_code_index()
 
 
 def _build_payload_locked(markdown: str | None = None) -> Dict:
@@ -357,9 +469,10 @@ def build_payload() -> Dict:
 def apply_disable_argument(
     argument: str, *, write_state: bool = True, sync_launcher_file: bool = True
 ) -> Dict:
-    canonical, codes = parse_disable_argument(argument)
+    _canonical, codes = parse_disable_argument(argument)
     disabled_codes = set(codes)
     with STATE_LOCK:
+        add_missing_codes(disabled_codes, enabled=False)
         apply_disabled_codes(disabled_codes)
         markdown, disable_arg = persist_state(_state_categories, write_state=write_state)
         payload = _build_payload_locked(markdown)
@@ -408,6 +521,7 @@ class ChecklistWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Sims 4 DLC Checklist")
         self.resize(1100, 750)
         self.checkbox_map: Dict[str, QtWidgets.QCheckBox] = {}
+        self._rendered_codes: set[str] = set()
         self._build_ui()
         self.refresh_payload()
 
@@ -460,8 +574,15 @@ class ChecklistWindow(QtWidgets.QMainWindow):
         self.setStatusBar(QtWidgets.QStatusBar())
 
     def _ensure_category_widgets(self, categories: List[Dict]) -> None:
-        if self.checkbox_map:
+        next_codes = {item["code"] for item in flatten_items(categories)}
+        if next_codes == self._rendered_codes:
             return
+        self.checkbox_map = {}
+        while self.categories_layout.count():
+            item = self.categories_layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
         for category in categories:
             group_box = QtWidgets.QGroupBox(category["title"])
             group_layout = QtWidgets.QGridLayout(group_box)
@@ -485,6 +606,7 @@ class ChecklistWindow(QtWidgets.QMainWindow):
                 self.checkbox_map[item["code"]] = checkbox
             self.categories_layout.addWidget(group_box)
         self.categories_layout.addStretch()
+        self._rendered_codes = next_codes
 
     def _update_checkboxes(self, categories: List[Dict]) -> None:
         for category in categories:
