@@ -25,10 +25,19 @@ DEFAULT_LAUNCHER_PATH = r"The Sims 4.bat"
 RAW_LAUNCHER_PATH = os.environ.get("SIMS4_BAT_PATH", DEFAULT_LAUNCHER_PATH)
 DISABLE_PREFIX = "-disablepacks:"
 DISABLE_REGEX = re.compile(r"-disablepacks:[^\s]*", re.IGNORECASE)
+SIZE_SUFFIX_REGEX = re.compile(r"\s+\[(\d+(?:\.\d+)?)\s*GB\]\s*$", re.IGNORECASE)
 SVG_NS = "http://www.w3.org/2000/svg"
 SVG_ICON_SIZE = 48
+BYTES_PER_GIB = 1024 ** 3
+DEFAULT_GAME_PATHS = [
+    Path(r"C:\Program Files (x86)\Steam\steamapps\common\The Sims 4"),
+    Path(r"C:\Program Files\Steam\steamapps\common\The Sims 4"),
+    Path(r"C:\Program Files\EA Games\The Sims 4"),
+]
+RAW_GAME_PATH = os.environ.get("SIMS4_GAME_PATH", "")
 SVG_SYMBOLS: Dict[str, bytes] = {}
 SVG_ICON_CACHE: Dict[str, QtGui.QIcon] = {}
+PACK_SIZE_GB: Dict[str, float] = {}
 
 ET.register_namespace("", SVG_NS)
 
@@ -118,6 +127,73 @@ def _resolve_launcher_path(raw_path: str) -> Path:
 LAUNCHER_BAT = _resolve_launcher_path(RAW_LAUNCHER_PATH)
 
 
+def _resolve_game_path(raw_path: str) -> Path | None:
+    candidates: List[Path] = []
+    normalized = raw_path.strip().strip('"')
+    if normalized:
+        candidates.append(Path(normalized))
+    candidates.extend(DEFAULT_GAME_PATHS)
+    for candidate in candidates:
+        if candidate.exists() and candidate.is_dir():
+            return candidate
+    return None
+
+
+def _parse_name_and_size(name: str) -> Tuple[str, float | None]:
+    text = name.strip()
+    match = SIZE_SUFFIX_REGEX.search(text)
+    if not match:
+        return text, None
+    try:
+        size_gb = float(match.group(1))
+    except ValueError:
+        return text, None
+    return text[:match.start()].rstrip(), size_gb
+
+
+def _directory_size_bytes(path: Path) -> int:
+    total = 0
+    for root, _dirs, files in os.walk(path):
+        for filename in files:
+            file_path = Path(root) / filename
+            try:
+                total += file_path.stat().st_size
+            except OSError:
+                continue
+    return total
+
+
+GAME_INSTALL_DIR = _resolve_game_path(RAW_GAME_PATH)
+
+
+def load_pack_sizes(codes: set[str]) -> Dict[str, float]:
+    sizes = {code: 0.0 for code in codes}
+    if GAME_INSTALL_DIR is None:
+        return sizes
+    for code in codes:
+        folder = GAME_INSTALL_DIR / code
+        if not folder.exists() or not folder.is_dir():
+            continue
+        sizes[code] = round(_directory_size_bytes(folder) / BYTES_PER_GIB, 2)
+    return sizes
+
+
+def get_pack_size_gb(code: str, fallback: float | None = None) -> float:
+    normalized = code.strip().upper()
+    size_gb = PACK_SIZE_GB.get(normalized)
+    if size_gb is not None:
+        return size_gb
+    if fallback is not None:
+        return round(float(fallback), 2)
+    return 0.0
+
+
+def apply_pack_sizes(categories: List[Dict]) -> None:
+    for category in categories:
+        for item in category["items"]:
+            item["size_gb"] = get_pack_size_gb(item["code"], item.get("size_gb"))
+
+
 def parse_checklist(markdown: str) -> List[Dict]:
     categories: List[Dict] = []
     current: Dict | None = None
@@ -144,16 +220,27 @@ def parse_checklist(markdown: str) -> List[Dict]:
             code, name = remainder.split(" - ", 1)
         except ValueError:
             continue
+        normalized_code = code.strip().upper()
+        normalized_name, parsed_size = _parse_name_and_size(name.strip())
         item = {
-            "code": code.strip().upper(),
-            "name": name.strip(),
+            "code": normalized_code,
+            "name": normalized_name,
             "enabled": enabled,
+            "size_gb": get_pack_size_gb(normalized_code, parsed_size),
         }
         current["items"].append(item)
     return categories
 
 
 DEFAULT_CATEGORIES = parse_checklist(RAW_CHECKLIST)
+PACK_SIZE_GB = load_pack_sizes(
+    {
+        item["code"]
+        for category in DEFAULT_CATEGORIES
+        for item in category["items"]
+    }
+)
+apply_pack_sizes(DEFAULT_CATEGORIES)
 DEFAULT_CODE_TO_CATEGORY = {
     item["code"]: category["title"]
     for category in DEFAULT_CATEGORIES
@@ -249,6 +336,9 @@ def merge_categories_with_defaults(categories: List[Dict]) -> List[Dict]:
                         "code": code,
                         "name": default_item["name"],
                         "enabled": source.get("enabled", default_item.get("enabled", True)),
+                        "size_gb": get_pack_size_gb(
+                            code, source.get("size_gb", default_item.get("size_gb"))
+                        ),
                     }
                 )
             else:
@@ -285,6 +375,7 @@ def add_missing_codes(codes: set[str], *, enabled: bool) -> bool:
                 "code": code,
                 "name": infer_name_for_code(code),
                 "enabled": enabled,
+                "size_gb": get_pack_size_gb(code),
             }
         )
         changed = True
@@ -320,7 +411,8 @@ def generate_markdown(categories: List[Dict]) -> str:
         lines.append("")
         for item in category["items"]:
             mark = "x" if item.get("enabled", False) else " "
-            lines.append(f"- [{mark}] {item['code']} - {item['name']}")
+            size_gb = get_pack_size_gb(item["code"], item.get("size_gb"))
+            lines.append(f"- [{mark}] {item['code']} - {item['name']} [{size_gb:.2f} GB]")
         lines.append("")
     lines.append("## Output")
     lines.append("")
@@ -331,6 +423,23 @@ def generate_markdown(categories: List[Dict]) -> str:
 
 def build_code_index(categories: List[Dict]) -> Dict[str, Dict]:
     return {item["code"]: item for item in flatten_items(categories)}
+
+
+def summarize_storage(categories: List[Dict]) -> Dict[str, float]:
+    enabled_gb = 0.0
+    disabled_gb = 0.0
+    for item in flatten_items(categories):
+        size_gb = get_pack_size_gb(item["code"], item.get("size_gb"))
+        if item.get("enabled", False):
+            enabled_gb += size_gb
+        else:
+            disabled_gb += size_gb
+    total_gb = enabled_gb + disabled_gb
+    return {
+        "enabledGB": round(enabled_gb, 2),
+        "disabledGB": round(disabled_gb, 2),
+        "totalGB": round(total_gb, 2),
+    }
 
 
 def persist_state(
@@ -419,13 +528,12 @@ def ensure_output_files() -> None:
 
     if STATE_MD.exists():
         parsed = parse_checklist(STATE_MD.read_text(encoding="utf-8"))
+        apply_pack_sizes(parsed)
         if parsed:
             target = merge_categories_with_defaults(parsed)
-            write_state = target != parsed
         else:
             target = copy.deepcopy(DEFAULT_CATEGORIES)
-            write_state = True
-        persist_state(target, write_state=write_state)
+        persist_state(target, write_state=True)
     else:
         persist_state(copy.deepcopy(DEFAULT_CATEGORIES), write_state=True)
 
@@ -434,6 +542,7 @@ def refresh_state_from_disk() -> None:
     global _state_categories, _code_index
     if STATE_MD.exists():
         parsed = parse_checklist(STATE_MD.read_text(encoding="utf-8"))
+        apply_pack_sizes(parsed)
     else:
         parsed = []
     if not parsed:
@@ -455,6 +564,7 @@ def _build_payload_locked(markdown: str | None = None) -> Dict:
         "categories": snapshot,
         "disableArgument": build_disable_argument(snapshot),
         "markdown": markdown_text,
+        "storage": summarize_storage(snapshot),
         "updatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
     return payload
@@ -534,6 +644,9 @@ class ChecklistWindow(QtWidgets.QMainWindow):
         self.updated_label = QtWidgets.QLabel("Last updated: --")
         self.updated_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
         main_layout.addWidget(self.updated_label)
+        self.storage_label = QtWidgets.QLabel("Enabled: 0.00 GB | Disabled: 0.00 GB | Total: 0.00 GB")
+        self.storage_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
+        main_layout.addWidget(self.storage_label)
 
         self.scroll_area = QtWidgets.QScrollArea()
         self.scroll_area.setWidgetResizable(True)
@@ -591,7 +704,8 @@ class ChecklistWindow(QtWidgets.QMainWindow):
             for col in range(3):
                 group_layout.setColumnStretch(col, 1)
             for idx, item in enumerate(category["items"]):
-                label = f"{item['name']} ({item['code']})"
+                size_gb = float(item.get("size_gb", 0.0))
+                label = f"{item['name']} ({item['code']}) - {size_gb:.2f} GB"
                 checkbox = QtWidgets.QCheckBox(label)
                 icon = get_pack_icon(item["code"])
                 if icon:
@@ -624,6 +738,10 @@ class ChecklistWindow(QtWidgets.QMainWindow):
         self.disable_line.setText(payload["disableArgument"])
         self.markdown_edit.setPlainText(payload["markdown"])
         self.updated_label.setText(f"Last updated: {payload['updatedAt']}")
+        storage = payload.get("storage", {"enabledGB": 0.0, "disabledGB": 0.0, "totalGB": 0.0})
+        self.storage_label.setText(
+            f"Enabled: {storage['enabledGB']:.2f} GB | Disabled: {storage['disabledGB']:.2f} GB | Total: {storage['totalGB']:.2f} GB"
+        )
 
     def refresh_payload(self) -> None:
         payload = build_payload()

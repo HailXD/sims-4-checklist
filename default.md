@@ -2,130 +2,130 @@
 
 ## Expansion Packs
 
-- [x] EP01 - Get To Work
-- [x] EP02 - Get Together
-- [x] EP03 - City Living
-- [x] EP04 - Cats & Dogs
-- [x] EP05 - Seasons
-- [x] EP06 - Get Famous
-- [x] EP07 - Island Living
-- [x] EP08 - Discover University
-- [x] EP09 - Eco Lifestyle
-- [x] EP10 - Snowy Escape
-- [x] EP11 - Cottage Living
-- [x] EP12 - High School Years
-- [x] EP13 - Growing Together
-- [x] EP14 - Horse Ranch
-- [x] EP15 - For Rent
-- [x] EP16 - Lovestruck
-- [x] EP17 - Life & Death
-- [x] EP18 - Businesses & Hobbies
-- [x] EP19 - Enchanted by Nature
-- [x] EP20 - Adventure Awaits
-- [x] EP21 - Royalty & Legacy
+- [x] EP01 - Get To Work [1.61 GB]
+- [x] EP02 - Get Together [1.65 GB]
+- [x] EP03 - City Living [2.48 GB]
+- [x] EP04 - Cats & Dogs [1.92 GB]
+- [x] EP05 - Seasons [1.34 GB]
+- [x] EP06 - Get Famous [2.64 GB]
+- [x] EP07 - Island Living [1.37 GB]
+- [x] EP08 - Discover University [1.54 GB]
+- [x] EP09 - Eco Lifestyle [1.42 GB]
+- [x] EP10 - Snowy Escape [1.52 GB]
+- [x] EP11 - Cottage Living [1.60 GB]
+- [x] EP12 - High School Years [1.76 GB]
+- [x] EP13 - Growing Together [1.33 GB]
+- [x] EP14 - Horse Ranch [1.78 GB]
+- [x] EP15 - For Rent [1.46 GB]
+- [x] EP16 - Lovestruck [1.63 GB]
+- [x] EP17 - Life & Death [2.01 GB]
+- [x] EP18 - Businesses & Hobbies [1.44 GB]
+- [x] EP19 - Enchanted by Nature [1.98 GB]
+- [x] EP20 - Adventure Awaits [1.49 GB]
+- [x] EP21 - Royalty & Legacy [2.43 GB]
 
 ## Game Packs
 
-- [x] GP01 - Outdoor Retreat
-- [x] GP02 - Spa Day
-- [x] GP03 - Dine Out
-- [x] GP04 - Vampires
-- [x] GP05 - Parenthood
-- [x] GP06 - Jungle Adventure
-- [x] GP07 - StrangerVille
-- [x] GP08 - Realm of Magic
-- [x] GP09 - Star Wars: Journey to Batuu
-- [x] GP10 - Dream Home Decorator
-- [x] GP11 - My Wedding Stories
-- [x] GP12 - Werewolves
+- [x] GP01 - Outdoor Retreat [0.66 GB]
+- [x] GP02 - Spa Day [0.50 GB]
+- [x] GP03 - Dine Out [0.44 GB]
+- [x] GP04 - Vampires [0.67 GB]
+- [x] GP05 - Parenthood [0.44 GB]
+- [x] GP06 - Jungle Adventure [0.89 GB]
+- [x] GP07 - StrangerVille [0.66 GB]
+- [x] GP08 - Realm of Magic [0.87 GB]
+- [x] GP09 - Star Wars: Journey to Batuu [1.37 GB]
+- [x] GP10 - Dream Home Decorator [0.65 GB]
+- [x] GP11 - My Wedding Stories [0.89 GB]
+- [x] GP12 - Werewolves [0.92 GB]
 
 ## Stuff Packs
 
-- [x] SP01 - Luxury Party Stuff
-- [x] SP02 - Perfect Patio Stuff
-- [x] SP03 - Cool Kitchen Stuff
-- [x] SP04 - Spooky Stuff
-- [x] SP05 - Movie Hangout Stuff
-- [x] SP06 - Romantic Garden Stuff
-- [x] SP07 - Kids Room Stuff
-- [x] SP08 - Backyard Stuff
-- [x] SP09 - Vintage Glamour Stuff
-- [x] SP10 - Bowling Night Stuff
-- [x] SP11 - Fitness Stuff
-- [x] SP12 - Toddler Stuff
-- [x] SP13 - Laundry Day Stuff
-- [x] SP14 - My First Pet Stuff
-- [x] SP15 - Moshino Stuff Pack
-- [x] SP16 - Tiny Living
-- [x] SP17 - Nifty Knitting
-- [x] SP18 - Paranormal
-- [x] SP46 - Home Chef Hustle Stuff
-- [x] SP49 - Crystal Creations Stuff Pack
+- [x] SP01 - Luxury Party Stuff [0.11 GB]
+- [x] SP02 - Perfect Patio Stuff [0.09 GB]
+- [x] SP03 - Cool Kitchen Stuff [0.14 GB]
+- [x] SP04 - Spooky Stuff [0.16 GB]
+- [x] SP05 - Movie Hangout Stuff [0.21 GB]
+- [x] SP06 - Romantic Garden Stuff [0.20 GB]
+- [x] SP07 - Kids Room Stuff [0.15 GB]
+- [x] SP08 - Backyard Stuff [0.17 GB]
+- [x] SP09 - Vintage Glamour Stuff [0.16 GB]
+- [x] SP10 - Bowling Night Stuff [0.19 GB]
+- [x] SP11 - Fitness Stuff [0.15 GB]
+- [x] SP12 - Toddler Stuff [0.16 GB]
+- [x] SP13 - Laundry Day Stuff [0.15 GB]
+- [x] SP14 - My First Pet Stuff [0.16 GB]
+- [x] SP15 - Moshino Stuff Pack [0.13 GB]
+- [x] SP16 - Tiny Living [0.21 GB]
+- [x] SP17 - Nifty Knitting [0.25 GB]
+- [x] SP18 - Paranormal [0.23 GB]
+- [x] SP46 - Home Chef Hustle Stuff [0.25 GB]
+- [x] SP49 - Crystal Creations Stuff Pack [0.28 GB]
 
 ## Kits
 
-- [x] SP20 - Throwback Fit Kit
-- [x] SP21 - Country Kitchen Kit
-- [x] SP22 - Bust The Dust Kit
-- [x] SP23 - Courtyard Oasis Kit
-- [x] SP24 - Fashion Street-Set
-- [x] SP25 - Industrial Loft Kit
-- [x] SP26 - Incheon Arrivals Kit
-- [x] SP28 - Modern Menswear Kit
-- [x] SP29 - Blooming Rooms Kit
-- [x] SP30 - Carnaval Streetwear Kit
-- [x] SP31 - Decor to the Max Kit
-- [x] SP32 - Moonlight Chic Kit
-- [x] SP33 - Little Campers Kit
-- [x] SP34 - First Fits Kit
-- [x] SP35 - Desert Luxe Kit
-- [x] SP36 - Pastel Pop Kit
-- [x] SP37 - Everyday Clutter Kit
-- [x] SP38 - Simtimates Collection Kit
-- [x] SP39 - Bathroom Clutter Kit
-- [x] SP40 - Greenhouse Haven Kit
-- [x] SP41 - Basement Treasures Kit
-- [x] SP42 - Grunge Revival Kit
-- [x] SP43 - Book Nook Kit
-- [x] SP44 - Poolside Splash Kit
-- [x] SP45 - Modern Luxe Kit
-- [x] SP47 - Castle Estate Kit
-- [x] SP48 - Goth Galore Kit
-- [x] SP50 - Urban Homage Kit
-- [x] SP51 - Party Essentials Kit
-- [x] SP52 - Riviera Retreat Kit
-- [x] SP53 - Cozy Bistro Kit
-- [x] SP54 - Artist Studio Kit
-- [x] SP55 - Storybook Nursery Kit
-- [x] SP58 - Comfy Gamer Kit
-- [x] SP59 - Secret Sanctuary Kit
-- [x] SP60 - Casanova Cave Kit
-- [x] SP65 - Restoration Workshop Kit
-- [x] SP66 - Golden Years Kit
-- [x] SP67 - Kitchen Clutter Kit
-- [x] SP68 - SpongeBob's House Kit
-- [x] SP69 - Autumn Apparel Kit
-- [x] SP70 - SpongeBob Kid's Room Kit
-- [x] SP76 - Silver Screen Style Kit
-- [x] SP77 - Tea Time Solarium Kit
+- [x] SP20 - Throwback Fit Kit [0.05 GB]
+- [x] SP21 - Country Kitchen Kit [0.05 GB]
+- [x] SP22 - Bust The Dust Kit [0.07 GB]
+- [x] SP23 - Courtyard Oasis Kit [0.06 GB]
+- [x] SP24 - Fashion Street-Set [0.06 GB]
+- [x] SP25 - Industrial Loft Kit [0.04 GB]
+- [x] SP26 - Incheon Arrivals Kit [0.07 GB]
+- [x] SP28 - Modern Menswear Kit [0.05 GB]
+- [x] SP29 - Blooming Rooms Kit [0.04 GB]
+- [x] SP30 - Carnaval Streetwear Kit [0.05 GB]
+- [x] SP31 - Decor to the Max Kit [0.03 GB]
+- [x] SP32 - Moonlight Chic Kit [0.08 GB]
+- [x] SP33 - Little Campers Kit [0.05 GB]
+- [x] SP34 - First Fits Kit [0.05 GB]
+- [x] SP35 - Desert Luxe Kit [0.05 GB]
+- [x] SP36 - Pastel Pop Kit [0.03 GB]
+- [x] SP37 - Everyday Clutter Kit [0.01 GB]
+- [x] SP38 - Simtimates Collection Kit [0.06 GB]
+- [x] SP39 - Bathroom Clutter Kit [0.01 GB]
+- [x] SP40 - Greenhouse Haven Kit [0.02 GB]
+- [x] SP41 - Basement Treasures Kit [0.02 GB]
+- [x] SP42 - Grunge Revival Kit [0.07 GB]
+- [x] SP43 - Book Nook Kit [0.02 GB]
+- [x] SP44 - Poolside Splash Kit [0.05 GB]
+- [x] SP45 - Modern Luxe Kit [0.02 GB]
+- [x] SP47 - Castle Estate Kit [0.11 GB]
+- [x] SP48 - Goth Galore Kit [0.06 GB]
+- [x] SP50 - Urban Homage Kit [0.09 GB]
+- [x] SP51 - Party Essentials Kit [0.03 GB]
+- [x] SP52 - Riviera Retreat Kit [0.05 GB]
+- [x] SP53 - Cozy Bistro Kit [0.05 GB]
+- [x] SP54 - Artist Studio Kit [0.04 GB]
+- [x] SP55 - Storybook Nursery Kit [0.05 GB]
+- [x] SP58 - Comfy Gamer Kit [0.02 GB]
+- [x] SP59 - Secret Sanctuary Kit [0.06 GB]
+- [x] SP60 - Casanova Cave Kit [0.06 GB]
+- [x] SP65 - Restoration Workshop Kit [0.05 GB]
+- [x] SP66 - Golden Years Kit [0.13 GB]
+- [x] SP67 - Kitchen Clutter Kit [0.02 GB]
+- [x] SP68 - SpongeBob's House Kit [0.03 GB]
+- [x] SP69 - Autumn Apparel Kit [0.08 GB]
+- [x] SP70 - SpongeBob Kid's Room Kit [0.07 GB]
+- [x] SP76 - Silver Screen Style Kit [0.08 GB]
+- [x] SP77 - Tea Time Solarium Kit [0.06 GB]
 
 ## Creator Kit
 
-- [x] SP56 - Sweet Slumber Party Kit
-- [x] SP57 - Cozy Kitsch Kit
-- [x] SP61 - Refined Living Room Kit
-- [x] SP62 - Business Chic Kit
-- [x] SP63 - Sleek Bathroom Kit
-- [x] SP64 - Sweet Allure Kit
-- [x] SP71 - Grange Mudroom Kit
-- [x] SP72 - Essential Glam Kit
-- [x] SP73 - Modern Retreat Kit
-- [x] SP74 - Garden to Table Kit
-- [x] SP81 - Prairie Dreams Set
+- [x] SP56 - Sweet Slumber Party Kit [0.05 GB]
+- [x] SP57 - Cozy Kitsch Kit [0.02 GB]
+- [x] SP61 - Refined Living Room Kit [0.03 GB]
+- [x] SP62 - Business Chic Kit [0.05 GB]
+- [x] SP63 - Sleek Bathroom Kit [0.03 GB]
+- [x] SP64 - Sweet Allure Kit [0.09 GB]
+- [x] SP71 - Grange Mudroom Kit [0.02 GB]
+- [x] SP72 - Essential Glam Kit [0.01 GB]
+- [x] SP73 - Modern Retreat Kit [0.04 GB]
+- [x] SP74 - Garden to Table Kit [0.04 GB]
+- [x] SP81 - Prairie Dreams Set [0.05 GB]
 
 ## Free Stuff
 
-- [x] FP01 - Holiday Celebration
+- [x] FP01 - Holiday Celebration [0.03 GB]
 
 ## Output
 
